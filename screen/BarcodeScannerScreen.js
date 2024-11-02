@@ -74,13 +74,11 @@ const BarcodeScannerScreen = () => {
     });
     setModalVisible(false);
     setProductDetails(null);
-    setScanned(false);
   };
 
   const cancelProduct = () => {
     setModalVisible(false);
     setProductDetails(null);
-    setScanned(false);
   };
 
   const incrementQuantity = (index) => {
@@ -109,7 +107,6 @@ const BarcodeScannerScreen = () => {
 
   const renderScannedProduct = ({ item, index }) => (
     <TouchableOpacity
-      onPress={() => incrementQuantity(index)}
       onLongPress={() =>
         Alert.alert(
           'Remove Item',
@@ -124,7 +121,6 @@ const BarcodeScannerScreen = () => {
     >
       <View style={styles.productInfo}>
         <Text style={styles.productName}>{item.name}</Text>
-        <Text style={styles.productPrice}>Price: P{item.price}</Text>
       </View>
       <View style={styles.quantityContainer}>
         <TouchableOpacity onPress={() => decrementQuantity(index)}>
@@ -135,9 +131,12 @@ const BarcodeScannerScreen = () => {
           <Text style={styles.button}>+</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.totalPrice}>
-        Total: P{(item.price * item.quantity).toFixed(2)}
-      </Text>
+      <View style={styles.productPriceContainer}>
+        <Text style={styles.productPrice}>Price: P{item.price}</Text>
+        <Text style={styles.totalPrice}>
+          Total: P{(item.price * item.quantity).toFixed(2)}
+        </Text>
+      </View>
     </TouchableOpacity>
   );
 
@@ -164,7 +163,11 @@ const BarcodeScannerScreen = () => {
         )}
       </View>
       <View style={styles.productListContainer}>
-        <Text style={styles.title}>Scanned Products</Text>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Name</Text>
+          <Text style={styles.headerText}>Quantity</Text>
+          <Text style={styles.headerText}>Price</Text>
+        </View>
         <FlatList
           data={scannedProducts}
           renderItem={renderScannedProduct}
@@ -235,7 +238,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   productListContainer: { flex: 2, backgroundColor: '#f9f9f9', padding: 10 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
   productItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -246,6 +248,10 @@ const styles = StyleSheet.create({
   },
   productInfo: { flex: 2 },
   productName: { fontSize: 16, fontWeight: '600' },
+  productPriceContainer: {
+    flex: 2,
+    alignItems: 'flex-end',
+  },
   productPrice: { fontSize: 14, color: '#4CAF50' },
   quantityContainer: {
     flexDirection: 'row',
@@ -255,7 +261,7 @@ const styles = StyleSheet.create({
   },
   button: { fontSize: 20, paddingHorizontal: 10, color: '#007BFF' },
   quantity: { fontSize: 18, marginHorizontal: 10 },
-  totalPrice: { flex: 1, fontSize: 16, fontWeight: 'bold', textAlign: 'right' },
+  totalPrice: { fontSize: 16, fontWeight: 'bold' },
   footer: {
     padding: 15,
     backgroundColor: '#f1f1f1',
@@ -272,22 +278,39 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    padding: 20,
     backgroundColor: 'white',
+    padding: 20,
     borderRadius: 10,
     alignItems: 'center',
   },
-  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  modalTitle: { fontSize: 18, fontWeight: 'bold' },
   modalText: { fontSize: 16, marginVertical: 5 },
-  modalButtons: { flexDirection: 'row', marginTop: 15 },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   modalButton: {
+    flex: 1,
+    padding: 10,
+    alignItems: 'center',
     backgroundColor: '#007BFF',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    marginHorizontal: 5,
     borderRadius: 5,
-    marginHorizontal: 10,
   },
   modalButtonText: { color: 'white', fontWeight: 'bold' },
+  header: {
+    flexDirection: 'row',
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: '#007BFF',
+  },
+  headerText: {
+    flex: 1,
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
+  },
 });
 
 export default BarcodeScannerScreen;
