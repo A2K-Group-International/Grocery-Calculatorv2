@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,19 @@ import {
   TextInput,
   Modal,
   Button,
-} from "react-native";
-import { supabase } from "../api/supabase"; // Adjust the import path as needed
+} from 'react-native';
+import { supabase } from '../api/supabase'; // Adjust the import path as needed
+import { BarCodeScanner } from 'expo-barcode-scanner';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [productData, setProductData] = useState({
     id: null,
-    name: "",
-    barcode: "",
-    price: "",
+    name: '',
+    barcode: '',
+    price: '',
   });
 
   useEffect(() => {
@@ -28,39 +30,39 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data, error } = await supabase.from("products").select("*");
+      const { data, error } = await supabase.from('products').select('*');
 
       if (error) throw error;
 
       setProducts(data);
     } catch (error) {
-      Alert.alert("Error fetching products", error.message);
+      Alert.alert('Error fetching products', error.message);
     }
   };
 
   const handleDelete = async (id) => {
     Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this product?",
+      'Confirm Delete',
+      'Are you sure you want to delete this product?',
       [
         {
-          text: "Cancel",
-          style: "cancel",
+          text: 'Cancel',
+          style: 'cancel',
         },
         {
-          text: "Delete",
+          text: 'Delete',
           onPress: async () => {
             try {
               const { error } = await supabase
-                .from("products")
+                .from('products')
                 .delete()
-                .eq("id", id);
+                .eq('id', id);
 
               if (error) throw error;
 
               setProducts(products.filter((product) => product.id !== id));
             } catch (error) {
-              Alert.alert("Error deleting product", error.message);
+              Alert.alert('Error deleting product', error.message);
             }
           },
         },
@@ -84,7 +86,7 @@ const AdminProducts = () => {
     // Ensure price is converted to a number if necessary
     const priceValue = parseFloat(price);
     if (isNaN(priceValue)) {
-      Alert.alert("Error", "Price must be a valid number.");
+      Alert.alert('Error', 'Price must be a valid number.');
       return;
     }
 
@@ -92,30 +94,30 @@ const AdminProducts = () => {
       if (id) {
         // Update existing product
         const { error } = await supabase
-          .from("products")
+          .from('products')
           .update({ name, barcode, price: priceValue }) // Use the numeric price
-          .eq("id", id);
+          .eq('id', id);
 
         if (error) throw error;
 
-        Alert.alert("Success", "Product updated successfully.");
+        Alert.alert('Success', 'Product updated successfully.');
       } else {
         // Add new product
         const { error } = await supabase
-          .from("products")
+          .from('products')
           .insert([{ name, barcode, price: priceValue }]); // Use the numeric price
 
         if (error) throw error;
 
-        Alert.alert("Success", "Product added successfully.");
+        Alert.alert('Success', 'Product added successfully.');
       }
 
       // Reset product data and close modal
-      setProductData({ id: null, name: "", barcode: "", price: "" });
+      setProductData({ id: null, name: '', barcode: '', price: '' });
       setModalVisible(false);
       fetchProducts(); // Refresh the product list
     } catch (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -143,6 +145,19 @@ const AdminProducts = () => {
     </View>
   );
 
+  const startScanning = () => {
+    setScanning(true);
+  };
+
+  const stopScanning = () => {
+    setScanning(false);
+  };
+
+  const handleBarCodeScanned = ({ type, data }) => {
+    setProductData({ ...productData, barcode: data });
+    stopScanning();
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>List of Products</Text>
@@ -161,7 +176,7 @@ const AdminProducts = () => {
 
       {/* Modal for Adding/Editing Products */}
       <Modal
-        animationType="slide"
+        animationType='slide'
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
@@ -170,7 +185,7 @@ const AdminProducts = () => {
       >
         <View style={styles.modalContainer}>
           <Text style={styles.modalTitle}>
-            {productData.id ? "Edit Product" : "Add Product"}
+            {productData.id ? 'Edit Product' : 'Add Product'}
           </Text>
           <View style={styles.formContainer}>
             <View style={styles.inputGroup}>
@@ -181,18 +196,26 @@ const AdminProducts = () => {
                 onChangeText={(text) =>
                   setProductData({ ...productData, name: text })
                 }
+                placeholder='Enter product name'
               />
             </View>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Barcode</Text>
-              <TextInput
-                style={styles.input}
-                value={productData.barcode}
-                onChangeText={(text) =>
-                  setProductData({ ...productData, barcode: text })
-                }
-              />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TextInput
+                  style={[styles.input, { flex: 1, marginRight: 5 }]} // 50% width with right margin
+                  value={productData.barcode}
+                  onChangeText={(text) =>
+                    setProductData({ ...productData, barcode: text })
+                  }
+                  placeholder='Scan or enter barcode'
+                />
+                <View style={{ flex: 1 }}>
+                  <Button title='Scan' onPress={startScanning} />
+                </View>
+              </View>
             </View>
+
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Price</Text>
               <TextInput
@@ -201,14 +224,31 @@ const AdminProducts = () => {
                 onChangeText={(text) =>
                   setProductData({ ...productData, price: text })
                 }
-                keyboardType="numeric"
+                keyboardType='numeric'
+                placeholder='Enter price'
               />
             </View>
           </View>
           <View style={styles.buttonContainer}>
-            <Button title="Save" onPress={handleAddEditProduct} />
-            <Button title="Cancel" onPress={() => setModalVisible(false)} />
+            <Button title='Save' onPress={handleAddEditProduct} />
+            <Button title='Cancel' onPress={() => setModalVisible(false)} />
           </View>
+        </View>
+      </Modal>
+
+      {/* Barcode Scanner Modal */}
+      <Modal
+        animationType='slide'
+        transparent={false}
+        visible={scanning}
+        onRequestClose={stopScanning}
+      >
+        <View style={styles.scannerContainer}>
+          <BarCodeScanner
+            onBarCodeScanned={handleBarCodeScanned}
+            style={StyleSheet.absoluteFillObject}
+          />
+          <Button title='Cancel' onPress={stopScanning} />
         </View>
       </Modal>
     </View>
@@ -219,26 +259,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: '#F9F9F9',
   },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 20,
-    textAlign: "center",
-    color: "#333",
+    textAlign: 'center',
+    color: '#333',
   },
   productList: {
     marginBottom: 20,
   },
   productItem: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 15,
     marginVertical: 5,
     borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    shadowColor: "#000",
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -249,92 +289,90 @@ const styles = StyleSheet.create({
   },
   productName: {
     fontSize: 18,
-    color: "#333",
-    fontWeight: "600",
+    color: '#333',
+    fontWeight: '600',
   },
   productBarcode: {
     fontSize: 14,
-    color: "#666",
+    color: '#666',
     marginVertical: 2,
   },
   productPrice: {
     fontSize: 16,
-    color: "#4CAF50",
-    fontWeight: "bold",
+    color: '#2ECC71',
+    fontWeight: '600',
   },
   buttonContainer: {
-    flexDirection: "row",
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   editButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    backgroundColor: '#3498DB',
+    padding: 10,
     borderRadius: 5,
     marginRight: 10,
   },
   editButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   deleteButton: {
-    backgroundColor: "#FF3D00",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    backgroundColor: '#E74C3C',
+    padding: 10,
     borderRadius: 5,
   },
   deleteButtonText: {
-    color: "#FFFFFF",
-    fontWeight: "bold",
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
   addButton: {
-    backgroundColor: "#4CAF50",
-    paddingVertical: 15,
+    backgroundColor: '#2ECC71',
+    padding: 15,
     borderRadius: 5,
-    alignItems: "center",
+    alignItems: 'center',
+    marginTop: 10,
   },
   addButtonText: {
-    color: "#FFFFFF",
+    color: '#FFFFFF',
+    fontWeight: 'bold',
     fontSize: 18,
-    fontWeight: "bold",
   },
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
     padding: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: 'white',
+    margin: 20,
+    borderRadius: 10,
   },
   modalTitle: {
-    fontSize: 24,
+    fontSize: 22,
+    fontWeight: 'bold',
     marginBottom: 20,
-    color: "#FFF",
-    textAlign: "center",
+    textAlign: 'center',
   },
   formContainer: {
     marginBottom: 20,
-    backgroundColor: "#FFF",
-    borderRadius: 10,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   inputGroup: {
     marginBottom: 15,
+    width: '100%',
   },
   label: {
     fontSize: 16,
-    color: "#333",
     marginBottom: 5,
   },
   input: {
-    height: 40,
-    borderColor: "#CCC",
+    borderColor: '#CCC',
     borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    backgroundColor: "#F9F9F9",
+    borderRadius: 2,
+    padding: 10,
+    fontSize: 16,
+  },
+  scannerContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
   },
 });
 
