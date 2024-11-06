@@ -1,0 +1,64 @@
+## Prerequisites
+
+To run this app, you'll need the following installed on your machine:
+
+1. **Node.js**
+
+   - Download and install the latest LTS version from [https://nodejs.org/](https://nodejs.org/). This includes npm, which is required for dependency installation.
+
+2. **Visual Studio Code (optional)**
+
+   - Download and install VS Code from [https://code.visualstudio.com/](https://code.visualstudio.com/). This editor is recommended for its support for extensions and debugging.
+
+3. **Expo CLI**
+   - Once Node.js is installed, open a terminal and install the Expo CLI globally by running:
+     ```
+     npm install -g expo-cli
+     ```
+
+## Running the App
+
+1. **Install Dependencies**
+
+   - In the project folder, install all libraries:
+     ```
+     npm install
+     ```
+
+2. **Start the App**
+
+   - To launch the app, run:
+     ```
+     npm start
+     ```
+
+3. **Open the App with Expo Go**
+   - Install the **Expo Go** app on your mobile device:
+     - [Expo Go on Android](https://play.google.com/store/apps/details?id=host.exp.exponent)
+     - [Expo Go on iOS](https://apps.apple.com/us/app/expo-go/id982107779)
+   - Open **Expo Go** on your device.
+   - Scan the QR code displayed in your terminal or browser after running `npm start` to load the app on your device.
+
+## Build Guide
+
+1. **Create an Expo Account**
+
+   - Sign up at [https://expo.dev/](https://expo.dev/) if you haven't already.
+
+2. **Build with EAS**
+
+   - In the terminal, build an Android preview APK:
+     ```
+     eas build -p android --profile preview
+     ```
+
+3. **Enter Expo Credentials**
+
+   - Log in with your Expo account credentials when prompted.
+
+4. **Download the APK**
+   - Once the build completes, download the APK file from the provided link.
+
+---
+
+This guide includes all the steps to get the app running on your device through Expo Go or by building an APK.
