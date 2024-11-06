@@ -10,7 +10,7 @@ import {
   Modal,
   Button,
 } from 'react-native';
-import { supabase } from '../api/supabase'; // Adjust the import path as needed
+import { supabase } from '../api/supabase';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 const AdminProducts = () => {
@@ -75,15 +75,13 @@ const AdminProducts = () => {
       id: product.id,
       name: product.name,
       barcode: product.barcode,
-      price: product.price.toString(), // Ensure it's a string for TextInput
+      price: product.price.toString(),
     });
     setModalVisible(true);
   };
 
   const handleAddEditProduct = async () => {
     const { name, barcode, price, id } = productData;
-
-    // Ensure price is converted to a number if necessary
     const priceValue = parseFloat(price);
     if (isNaN(priceValue)) {
       Alert.alert('Error', 'Price must be a valid number.');
@@ -95,27 +93,31 @@ const AdminProducts = () => {
         // Update existing product
         const { error } = await supabase
           .from('products')
-          .update({ name, barcode, price: priceValue }) // Use the numeric price
+          .update({ name, barcode, price: priceValue })
           .eq('id', id);
 
         if (error) throw error;
 
         Alert.alert('Success', 'Product updated successfully.');
       } else {
-        // Add new product
-        const { error } = await supabase
-          .from('products')
-          .insert([{ name, barcode, price: priceValue }]); // Use the numeric price
+        // Add new product with current date
+        const { error } = await supabase.from('products').insert([
+          {
+            name,
+            barcode,
+            price: priceValue,
+            date_added: new Date().toISOString(), // Set current date
+          },
+        ]);
 
         if (error) throw error;
 
         Alert.alert('Success', 'Product added successfully.');
       }
 
-      // Reset product data and close modal
       setProductData({ id: null, name: '', barcode: '', price: '' });
       setModalVisible(false);
-      fetchProducts(); // Refresh the product list
+      fetchProducts();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -203,7 +205,7 @@ const AdminProducts = () => {
               <Text style={styles.label}>Barcode</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <TextInput
-                  style={[styles.input, { flex: 1, marginRight: 5 }]} // 50% width with right margin
+                  style={[styles.input, { flex: 1, marginRight: 5 }]}
                   value={productData.barcode}
                   onChangeText={(text) =>
                     setProductData({ ...productData, barcode: text })
@@ -236,7 +238,6 @@ const AdminProducts = () => {
         </View>
       </Modal>
 
-      {/* Barcode Scanner Modal */}
       <Modal
         animationType='slide'
         transparent={false}
