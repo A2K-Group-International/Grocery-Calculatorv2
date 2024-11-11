@@ -106,7 +106,6 @@ const AdminProducts = () => {
             name,
             barcode,
             price: priceValue,
-            date_added: new Date().toISOString(), // Set current date
           },
         ]);
 
