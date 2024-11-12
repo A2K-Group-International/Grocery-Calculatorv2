@@ -32,19 +32,23 @@ const BarcodeScannerScreen = () => {
         .from('products')
         .select('*')
         .eq('barcode', data)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error) {
         alert(`Error fetching product: ${error.message}`);
+
         return;
       }
 
-      if (product) {
-        setProductDetails(product);
-        setModalVisible(true);
-      } else {
-        alert('No product found for the scanned barcode.');
+      if (!product) {
+        alert('Scanned barcode item not found.');
+
+        return;
       }
+
+      setProductDetails(product);
+      setModalVisible(true);
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
