@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { View, Button, StyleSheet, Text, FlatList } from 'react-native';
-import { supabase } from '../api/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeScreen = ({ navigation }) => {
   const [latestProducts, setLatestProducts] = useState([]);
+  const [loading, setLoading] = useState(true); // Added loading state
 
   useEffect(() => {
-    fetchLatestProducts();
+    fetchLatestProductsFromStorage();
   }, []);
-  const fetchLatestProducts = async () => {
+
+  const fetchLatestProductsFromStorage = async () => {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('data_added', { ascending: false })
-        .limit(5); // Fetch latest 5 products
-      if (error) throw error;
-      setLatestProducts(data);
+      const storedProducts = await AsyncStorage.getItem('products');
+
+      if (storedProducts) {
+        const productsArray = JSON.parse(storedProducts);
+
+        // Sort by `data_added` to ensure latest items are displayed first
+        const latestProducts = productsArray
+          .sort((a, b) => new Date(b.data_added) - new Date(a.data_added))
+          .slice(0, 5); // Get the latest 5 products
+
+        setLatestProducts(latestProducts);
+      } else {
+        console.log('No products found in AsyncStorage');
+      }
     } catch (error) {
-      console.error('Error fetching latest products:', error.message);
+      console.error('Error fetching products from storage:', error.message);
+    } finally {
+      setLoading(false); // Set loading to false after fetching
     }
   };
 
@@ -39,11 +50,18 @@ const HomeScreen = ({ navigation }) => {
       {/* Latest Products */}
       <View style={styles.latestProductsContainer}>
         <Text style={styles.sectionTitle}>Latest Added Items</Text>
-        <FlatList
-          data={latestProducts}
-          renderItem={renderProductItem}
-          keyExtractor={(item) => item.id.toString()}
-        />
+
+        {loading ? (
+          <Text>Loading...</Text> // Show loading text while data is being fetched
+        ) : latestProducts.length > 0 ? (
+          <FlatList
+            data={latestProducts}
+            renderItem={renderProductItem}
+            keyExtractor={(item) => item.id.toString()}
+          />
+        ) : (
+          <Text>No products available</Text> // Handle no products scenario
+        )}
       </View>
 
       {/* Button Container */}

@@ -9,7 +9,7 @@ import {
   Modal,
 } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
-import { supabase } from '../api/supabase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BarcodeScannerScreen = () => {
   const [hasPermission, setHasPermission] = useState(null);
@@ -17,41 +17,39 @@ const BarcodeScannerScreen = () => {
   const [scannedProducts, setScannedProducts] = useState([]);
   const [productDetails, setProductDetails] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [products, setProducts] = useState([]); // To store the products loaded from AsyncStorage
 
   useEffect(() => {
+    // Request permission to access the camera
     (async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
     })();
+
+    // Load products from AsyncStorage when the component mounts
+    const loadProducts = async () => {
+      const storedProducts = await AsyncStorage.getItem('products');
+      if (storedProducts) {
+        setProducts(JSON.parse(storedProducts));
+        console.log('Products: ', products);
+      }
+    };
+    loadProducts();
   }, []);
 
-  const handleBarCodeScanned = async ({ type, data }) => {
+  const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
-    try {
-      const { data: product, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('barcode', data)
-        .limit(1)
-        .maybeSingle();
 
-      if (error) {
-        alert(`Error fetching product: ${error.message}`);
+    // Search for the scanned barcode in the products loaded from AsyncStorage
+    const product = products.find((p) => p.barcode === data);
 
-        return;
-      }
-
-      if (!product) {
-        alert('Scanned barcode item not found.');
-
-        return;
-      }
-
-      setProductDetails(product);
-      setModalVisible(true);
-    } catch (error) {
-      alert(`Error: ${error.message}`);
+    if (!product) {
+      alert('Scanned barcode item not found.');
+      return;
     }
+
+    setProductDetails(product);
+    setModalVisible(true);
   };
 
   const confirmProduct = () => {
@@ -281,34 +279,28 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
     backgroundColor: 'white',
     padding: 20,
     borderRadius: 10,
     alignItems: 'center',
+    width: '80%',
   },
-  modalTitle: { fontSize: 18, fontWeight: 'bold' },
-  modalText: { fontSize: 16, marginVertical: 5 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10 },
+  modalText: { fontSize: 16, marginBottom: 5 },
   modalButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     width: '100%',
   },
   modalButton: {
-    flex: 1,
-    padding: 10,
-    alignItems: 'center',
     backgroundColor: '#007BFF',
-    marginHorizontal: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
+    marginTop: 10,
   },
   modalButtonText: { color: 'white', fontWeight: 'bold' },
-  header: {
-    flexDirection: 'row',
-    paddingVertical: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: '#007BFF',
-  },
+  header: { flexDirection: 'row', padding: 10, backgroundColor: '#f1f1f1' },
   headerText: {
     flex: 1,
     fontWeight: 'bold',
