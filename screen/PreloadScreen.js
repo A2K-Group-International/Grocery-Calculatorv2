@@ -10,7 +10,7 @@ const PreloadScreen = ({ navigation }) => {
 
   const checkAndPreloadProducts = async () => {
     try {
-      // Step 1: Fetch all data from Supabase
+      // Step 1: Try to fetch all data from Supabase
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -49,12 +49,10 @@ const PreloadScreen = ({ navigation }) => {
       } else {
         console.log('No new updates found');
       }
-
-      // Navigate to the Home screen
-      navigation.replace('Home');
     } catch (error) {
       console.error('Error preloading products:', error.message);
-      // If there is an error, just proceed to the Home screen
+    } finally {
+      // Regardless of success or failure, navigate to the Home screen
       navigation.replace('Home');
     }
   };
