@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Button, StyleSheet, Text, FlatList } from 'react-native';
+import {
+  View,
+  Button,
+  StyleSheet,
+  Text,
+  FlatList,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HomeScreen = ({ navigation }) => {
   const [latestProducts, setLatestProducts] = useState([]);
-  const [loading, setLoading] = useState(true); // Added loading state
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false); // State to control modal visibility
 
   useEffect(() => {
     fetchLatestProductsFromStorage();
@@ -13,14 +22,11 @@ const HomeScreen = ({ navigation }) => {
   const fetchLatestProductsFromStorage = async () => {
     try {
       const storedProducts = await AsyncStorage.getItem('products');
-
       if (storedProducts) {
         const productsArray = JSON.parse(storedProducts);
-
-        // Sort by `data_added` to ensure latest items are displayed first
         const latestProducts = productsArray
           .sort((a, b) => new Date(b.data_added) - new Date(a.data_added))
-          .slice(0, 5); // Get the latest 5 products
+          .slice(0, 5);
 
         setLatestProducts(latestProducts);
       } else {
@@ -29,7 +35,7 @@ const HomeScreen = ({ navigation }) => {
     } catch (error) {
       console.error('Error fetching products from storage:', error.message);
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false);
     }
   };
 
@@ -47,22 +53,39 @@ const HomeScreen = ({ navigation }) => {
         <Text style={styles.headerText}>Welcome to Grocery Calculator App</Text>
       </View>
 
-      {/* Latest Products */}
-      <View style={styles.latestProductsContainer}>
-        <Text style={styles.sectionTitle}>Latest Added Items</Text>
+      {/* Button to open modal */}
+      <TouchableOpacity
+        style={styles.showModalButton}
+        onPress={() => setModalVisible(true)}
+      >
+        <Text style={styles.showModalButtonText}>Show Latest Added Items</Text>
+      </TouchableOpacity>
 
-        {loading ? (
-          <Text>Loading...</Text> // Show loading text while data is being fetched
-        ) : latestProducts.length > 0 ? (
-          <FlatList
-            data={latestProducts}
-            renderItem={renderProductItem}
-            keyExtractor={(item) => item.id.toString()}
-          />
-        ) : (
-          <Text>No products available</Text> // Handle no products scenario
-        )}
-      </View>
+      {/* Latest Products Modal */}
+      <Modal
+        animationType='slide'
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.sectionTitle}>Latest Added Items</Text>
+            {loading ? (
+              <Text>Loading...</Text>
+            ) : latestProducts.length > 0 ? (
+              <FlatList
+                data={latestProducts}
+                renderItem={renderProductItem}
+                keyExtractor={(item) => item.id.toString()}
+              />
+            ) : (
+              <Text>No products available</Text>
+            )}
+            <Button title='Close' onPress={() => setModalVisible(false)} />
+          </View>
+        </View>
+      </Modal>
 
       {/* Button Container */}
       <View style={styles.buttonContainer}>
@@ -95,8 +118,28 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  latestProductsContainer: {
-    marginBottom: 20,
+  showModalButton: {
+    padding: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 5,
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  showModalButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    padding: 20,
+    marginHorizontal: 20,
+    borderRadius: 10,
   },
   sectionTitle: {
     fontSize: 18,
