@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   Alert,
   Modal,
+  Button,
 } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 const BarcodeScannerScreen = () => {
+  const navigation = useNavigation(); // Access navigation object
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [scannedProducts, setScannedProducts] = useState([]);
@@ -36,6 +39,15 @@ const BarcodeScannerScreen = () => {
     };
     loadProducts();
   }, []);
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={styles.headerButton}>
+          <Button title="Login" onPress={() => navigation.navigate('Login')} />
+        </View>
+      ),
+    });
+  }, [navigation]);
 
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
@@ -186,7 +198,7 @@ const BarcodeScannerScreen = () => {
       <Modal
         visible={modalVisible}
         transparent={true}
-        animationType='slide'
+        animationType="slide"
         onRequestClose={cancelProduct}
       >
         <View style={styles.modalContainer}>

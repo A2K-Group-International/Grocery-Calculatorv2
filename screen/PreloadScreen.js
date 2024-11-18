@@ -53,13 +53,13 @@ const PreloadScreen = ({ navigation }) => {
       console.error('Error preloading products:', error.message);
     } finally {
       // Regardless of success or failure, navigate to the Home screen
-      navigation.replace('Home');
+      navigation.replace('Barcode Scanner');
     }
   };
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size='large' color='#0000ff' />
+      <ActivityIndicator size="large" color="#0000ff" />
       <Text style={styles.text}>Loading products...</Text>
     </View>
   );
