@@ -10,7 +10,7 @@ const PreloadScreen = ({ navigation }) => {
 
   const checkAndPreloadProducts = async () => {
     try {
-      // Step 1: Try to fetch all data from Supabase
+      // Step 1: Fetch all data from Supabase
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -35,25 +35,29 @@ const PreloadScreen = ({ navigation }) => {
       if (newProducts.length > 0) {
         console.log('New products found:', newProducts);
 
-        // Step 4: Save the fetched data to AsyncStorage
+        // Save the fetched data to AsyncStorage
         await AsyncStorage.setItem('products', JSON.stringify(data));
         console.log('Products data saved to AsyncStorage:', data);
 
-        // Notify the user about the new items
+        // Notify the user about the new items and navigate to Barcode Scanner
         Alert.alert(
           'New Items Available!',
           'New products have been added to the database.',
-          [{ text: 'OK', onPress: () => navigation.replace('Home') }],
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.replace('Barcode Scanner'),
+            },
+          ],
           { cancelable: false }
         );
       } else {
         console.log('No new updates found');
+        navigation.replace('Barcode Scanner'); // No new products, navigate directly
       }
     } catch (error) {
       console.error('Error preloading products:', error.message);
-    } finally {
-      // Regardless of success or failure, navigate to the Home screen
-      navigation.replace('Barcode Scanner');
+      navigation.replace('Barcode Scanner'); // Handle error and navigate
     }
   };
 
